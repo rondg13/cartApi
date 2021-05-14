@@ -5,11 +5,8 @@ namespace App\Http\Controllers\Api\V1\Carts;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Carts\PostApiV1CartsRequest;
 use App\Http\Requests\Api\V1\Carts\PutApiV1CartsRequest;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Support\Carbon;
+use App\Services\Carts\CartService;
 use App\Models\Cart;
-
-use function PHPUnit\Framework\throwException;
 
 class CartsController extends ApiController
 {
@@ -22,19 +19,9 @@ class CartsController extends ApiController
     {
         $request->validated();
 
-        try{
+        $cartService = new CartService();
 
-            $cart = new Cart();
-
-            $cart->store_id = $request->storeId;
-            $cart->currency = $request->currency;
-            $cart->products = json_encode($request->products);
-
-            $cart->save();
-
-        }catch(\Exception $e){
-            return $e->getMessage();
-        }
+        $cart = $cartService->post($request);
 
         return $this->successResponse($cart, 201);
     }
@@ -48,18 +35,12 @@ class CartsController extends ApiController
     {
         $request->validated();
 
-        try{
+        $cartService = new CartService();
 
-            $cart = Cart::findOrFail($cartId);
-            
-            if(!$cart){
-                throw new NotFoundHttpException('Cart not found.');
-            }
+        $cart = $cartService->put($request, $cartId);
 
-            $cart->update($request->all());
-
-        }catch(\Exception $e){
-            return $e->getMessage();
+        if(is_null($cart->id)){
+            return $this->respond404('Cart not found.');
         }
 
         return $this->successResponse($cart, 200);
@@ -73,10 +54,12 @@ class CartsController extends ApiController
      */
     public function get($cartId)
     {
-        $cart= Cart::find($cartId);
-        
-        if(!$cart){
-            throw new NotFoundHttpException('Cart not found.');
+        $cartService = new CartService();
+
+        $cart = $cartService->get($cartId);
+
+        if(is_null($cart->id)){
+            return $this->respond404('Cart not found.');
         }
 
         return $this->successResponse($cart, 200);
