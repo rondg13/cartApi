@@ -24,5 +24,6 @@ class Cart extends Model
     protected $fillable = [
         'store_id',
         'currency',
+        'products'
     ];
 }
