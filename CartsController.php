@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Carts;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Carts\PostApiV1CartsRequest;
 use App\Http\Requests\Api\V1\Carts\PutApiV1CartsRequest;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Support\Carbon;
 use App\Models\Cart;
 
@@ -50,12 +51,12 @@ class CartsController extends ApiController
         try{
 
             $cart = Cart::findOrFail($cartId);
+            
+            if(!$cart){
+                throw new NotFoundHttpException('Cart not found.');
+            }
 
-            $cart->store_id = $request->storeId;
-            $cart->currency = $request->currency;
-            $cart->products = json_encode($request->products);
-
-            $cart->update();
+            $cart->update($request->all());
 
         }catch(\Exception $e){
             return $e->getMessage();
@@ -73,6 +74,10 @@ class CartsController extends ApiController
     public function get($cartId)
     {
         $cart= Cart::find($cartId);
+        
+        if(!$cart){
+            throw new NotFoundHttpException('Cart not found.');
+        }
 
         return $this->successResponse($cart, 200);
     }
